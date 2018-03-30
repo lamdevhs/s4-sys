@@ -1,0 +1,23 @@
+#!/bin/bash
+
+CAN="$HOME/.poubelle"
+UTIL="$HOME/.poubelle-util"
+INDEX="$UTIL/INDEX"
+
+first() {
+	echo $1
+}
+
+linesN=$(first `wc -l "$INDEX"`)
+
+if [ $linesN -eq 0 ] ; then
+	echo "La poubelle est vide."
+else
+	echo "La poubelle contient $linesN fichier(s)."
+fi
+
+for line in $(cat "$INDEX") ; do
+	name=$(echo "$line" | cut -f1 -d:)
+	path=$(echo "$line" | cut -f2 -d:)
+	echo "$name de répertoire d'origine $path"
+done

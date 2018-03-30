@@ -1,0 +1,11 @@
+#!/bin/bash
+
+CAN="$HOME/.poubelle"
+UTIL="$HOME/.poubelle-util"
+INDEX="$UTIL/INDEX"
+
+rm -r "$CAN"
+mkdir "$CAN"
+> "$INDEX"
+
+echo "poubelle vidée"

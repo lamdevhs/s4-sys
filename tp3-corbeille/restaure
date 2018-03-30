@@ -1,0 +1,64 @@
+#!/bin/bash
+
+CAN="$HOME/.poubelle"
+UTIL="$HOME/.poubelle-util"
+INDEX="$UTIL/INDEX"
+INDEX_TMP="$UTIL/INDEX-tmp"
+
+name="$1"
+
+searchIndex() {
+	IFS=$'\n'
+	for line in $(cat "$INDEX") ; do
+		name=$(echo "$line" | cut -f1 -d:)
+		if [ "$name" = "$1" ] ; then
+			path=$(echo "$line" | cut -f2 -d:)
+			echo "$path"
+			return
+		fi
+	done
+}
+
+path=$(searchIndex "$name")
+
+if [ -z "$path" ] ; then
+	echo "the file isn't in the trash."
+	exit 1
+fi
+
+# else
+
+isRealFile() {
+	[ -e "$1" ] && [ -f "$1"  ]
+}
+
+if $(isRealFile "$path") ; then
+	echo "file exists where file to restore existed. overwrite? (y/*)"
+	read ans
+	case "$ans" in
+		y|Y) ok=0 ;;
+		*) ok=1 ;;
+	esac
+else
+	ok=0
+fi
+
+
+rewriteIndex() {
+	echo rewriting index
+	name="$1"
+	path="$2"
+	cat "$INDEX" | grep -v "^$name:$path\$" > "$INDEX_TMP"
+	mv "$INDEX_TMP" "$INDEX"
+}
+
+
+if [ $ok = 0 ] ; then
+	echo "restoring $name --> $path"
+	mv "$CAN/$name" "$path"
+	rewriteIndex $name $path
+else
+	echo "nothing was done as you refused the overwriting."
+fi
+
+exit 0

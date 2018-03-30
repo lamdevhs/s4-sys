@@ -1,0 +1,89 @@
+#!/bin/bash
+
+CAN="$HOME/.poubelle"
+UTIL="$HOME/.poubelle-util"
+INDEX="$UTIL/INDEX"
+INDEX_TMP="$UTIL/INDEX-tmp"
+
+# creates ~/.poubelle if doesn exist
+if ! [ -e "$CAN" ] ; then
+	mkdir "$CAN"
+	echo note: created $CAN
+fi
+
+if ! [ -e "$UTIL" ] ; then
+	mkdir -p "$UTIL"
+	echo note: created $UTIL
+fi
+
+if ! [ -e "$INDEX" ] ; then
+	touch "$INDEX"
+	echo note: created $INDEX
+fi
+
+isRealFile() {
+	[ -e "$1" ]
+}
+
+isInIndex() {
+	IFS=$'\n'
+	for line in $(cat "$INDEX") ; do
+		name=$(echo "$line" | cut -f1 -d:)
+		if [ "$name" = "$1" ] ; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+rewriteIndex() {
+	echo rewriting index
+	name="$1"
+	path="$2"
+	cat "$INDEX" | grep -v "^$name:" > "$INDEX_TMP"
+	echo "$name:$path" >> "$INDEX_TMP"
+	mv "$INDEX_TMP" "$INDEX"
+}
+
+confirm="$path already exists in the trash: delete it? (y/*)"
+deleteOne() {
+	path="$1"
+	name=$(basename "$path")
+
+	mustRewriteIndex=1
+	if $(isInIndex "$name") ; then
+		echo $confirm
+		read ans
+		case "$ans" in
+			y|Y) ok=0 ; mustRewriteIndex=0 ;;
+			*) ok=1 ;;
+		esac
+	else
+		ok=0
+	fi
+	echo "ok is $ok"
+
+	if [ "$ok" = "0" ] ; then
+		echo "info: deleting $1"
+		echo "$name:$path" >> "$INDEX"
+		mv "$path" "$CAN/$name"
+		gzip "$CAN/$name"
+		if [ $mustRewriteIndex = 0 ] ; then
+			rewriteIndex "$name" "$path"
+		fi
+	else
+		echo "info: was in index and you said no"
+	fi
+}
+
+while [ $# -ne 0 ] ; do
+	path=$(readlink -f "$1")
+	echo "#---- file : $path"
+	if $(isRealFile "$path") ; then
+		echo "file exists"
+		deleteOne "$path"
+	else
+		echo "warning: $1 doesn't exist, or isn't a simple file"
+	fi
+	shift
+done

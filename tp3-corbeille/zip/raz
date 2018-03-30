@@ -1,0 +1,5 @@
+#!/bin/bash
+
+rm ~/.poubelle/*
+> ~/.poubelle-util/INDEX
+touch a b c d e
