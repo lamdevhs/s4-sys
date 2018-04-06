@@ -5,24 +5,28 @@ UTIL="$HOME/.poubelle-util"
 INDEX="$UTIL/INDEX"
 INDEX_TMP="$UTIL/INDEX-tmp"
 
+if [ "$#" -lt 1 ] ; then
+	echo error: at least one parameter required
+	exit 1
+fi
+
 name="$1"
 
-searchIndex() {
-	IFS=$'\n'
-	for line in $(cat "$INDEX") ; do
-		name=$(echo "$line" | cut -f1 -d:)
-		if [ "$name" = "$1" ] ; then
-			path=$(echo "$line" | cut -f2 -d:)
-			echo "$path"
-			return
-		fi
-	done
-}
+# search in the index
+valueFound=1
+IFS=$'\n'
+for line in $(cat "$INDEX") ; do
+	nameHere=$(echo "$line" | cut -f1 -d:)
+	if [ "$nameHere" = "$name" ] ; then
+		path=$(echo "$line" | cut -f2 -d:)
+		isDir=$(echo "$line" | cut -f3 -d:)
+		valueFound=0
+		break
+	fi
+done
 
-path=$(searchIndex "$name")
-
-if [ -z "$path" ] ; then
-	echo "the file isn't in the trash."
+if ! [ "$valueFound" = 0 ] || [ -z "$path" ]; then
+	echo "error: name wasn't found in the index."
 	exit 1
 fi
 
@@ -36,11 +40,11 @@ if $(isRealFile "$path") ; then
 	echo "file exists where file to restore existed. overwrite? (y/*)"
 	read ans
 	case "$ans" in
-		y|Y) ok=0 ;;
-		*) ok=1 ;;
+		y|Y) doRestore=0 ;;
+		*) doRestore=1 ;;
 	esac
 else
-	ok=0
+	doRestore=0
 fi
 
 
@@ -48,15 +52,22 @@ rewriteIndex() {
 	echo rewriting index
 	name="$1"
 	path="$2"
-	cat "$INDEX" | grep -v "^$name:$path\$" > "$INDEX_TMP"
+	cat "$INDEX" | grep -v "^$name:$path:" > "$INDEX_TMP"
 	mv "$INDEX_TMP" "$INDEX"
 }
 
-
-if [ $ok = 0 ] ; then
+if [ $doRestore = 0 ] ; then
 	echo "restoring $name --> $path"
-	gunzip "$CAN/$name.gz"
-	mv "$CAN/$name" "$path"
+	cd "$CAN"
+	gunzip "$name.gz"
+	if [ "$isDir" -eq 0 ] ; then
+		echo "info: is a folder."
+		mv "$name" "$name-42TEMPORARY"
+		tar -xvf "$name-42TEMPORARY"
+		rm "$name-42TEMPORARY"
+	fi
+	mv "$name" "$(dirname $path)"
+	cd -
 	rewriteIndex $name $path
 else
 	echo "nothing was done as you refused the overwriting."

@@ -40,8 +40,9 @@ rewriteIndex() {
 	echo rewriting index
 	name="$1"
 	path="$2"
+	isDir="$3"
 	cat "$INDEX" | grep -v "^$name:" > "$INDEX_TMP"
-	echo "$name:$path" >> "$INDEX_TMP"
+	echo "$name:$path:$isDir" >> "$INDEX_TMP"
 	mv "$INDEX_TMP" "$INDEX"
 }
 
@@ -65,12 +66,26 @@ deleteOne() {
 
 	if [ "$ok" = "0" ] ; then
 		echo "info: deleting $1"
-		echo "$name:$path" >> "$INDEX"
 		mv "$path" "$CAN/$name"
-		gzip "$CAN/$name"
-		if [ $mustRewriteIndex = 0 ] ; then
-			rewriteIndex "$name" "$path"
+
+		[ -d "$CAN/$name" ]
+		isDir=$?
+
+		if [ "$isDir" == "0" ] ; then
+			echo "info: $name is a folder"
+			cd "$CAN"
+			tar -cf "$name-42TEMPORARY" "$name"
+			rm -r "$name"
+			mv "$name-42TEMPORARY" "$name"
+			cd -
 		fi
+		if [ $mustRewriteIndex = 0 ] ; then
+			rm "$CAN/$name.gz"
+			rewriteIndex "$name" "$path" "$isDir"
+		else
+			echo "$name:$path:$isDir" >> "$INDEX"
+		fi
+		gzip "$CAN/$name"
 	else
 		echo "info: was in index and you said no"
 	fi

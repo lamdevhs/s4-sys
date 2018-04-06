@@ -1,5 +1,19 @@
 #!/bin/bash
 
-rm ~/.poubelle/*
+rm -r ~/.poubelle/*
 > ~/.poubelle-util/INDEX
-touch a b c d e
+
+if ! [ "$(basename $PWD)" = "tests" ] ; then
+	echo "error: wrong folder"
+	exit 1
+fi
+
+echo "you're here:" $PWD
+read waiting
+
+rm -r ./*
+
+new() { echo "$1" > "$1" ; }
+new a ; new b ; new c ;
+mkdir d
+new d/e ; new d/f

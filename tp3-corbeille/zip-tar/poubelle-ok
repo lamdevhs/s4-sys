@@ -1,0 +1,44 @@
+#!/bin/bash
+
+CAN="$HOME/.poubelle"
+UTIL="$HOME/.poubelle-util"
+INDEX="$UTIL/INDEX"
+INDEX_TMP="$UTIL/INDEX-tmp"
+
+IFS=$'\n'
+
+allOk=0
+
+countFiles() {
+	cd "$1"
+	echo $(find -type f -printf . | wc -c)
+	cd -
+}
+
+nDeleted=$(countFiles "$CAN")
+indexSize=$(wc -l "$INDEX")
+
+if [ "$nDeleted" -ne "$indexSize" ] ; then
+	echo "error: nb of files different in index and in trash."
+	allOk=1
+fi
+
+# checking there's a file in the trash for each name in index
+for line in $(cat "$INDEX") ; do
+	name=$(echo "$line" | cut -f1 -d:)
+	if ! [ -e "$CAN/$name.gz" ] ; then
+		echo "'$name' is not in the trash."
+		allOk=1
+	fi
+done
+
+# checking there's an index line for each file in trash
+cat "$INDEX" | cut -f1 -d: | uniq
+
+for file in $(ls -l "$CAN") ; do
+
+	if ! [ -e "$CAN/$name.gz" ] ; then
+		echo "'$name' is not in the trash."
+		allOk=1
+	fi
+done
