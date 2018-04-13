@@ -1,0 +1,30 @@
+#!/bin/bash
+
+Dir="$HOME/ZIPTXT"
+Info="$Dir/ZIPINFO.txt"
+
+if [ -e "$Dir" ] ; then
+	echo "Erreur: $Dir existe déjà."
+	#exit 1
+fi
+
+mkdir "$Dir"
+touch "$Info"
+
+isTxt() {
+	extension=${1##*.}
+	[ -f "$1" ] && [ "$extension" = "txt" ]
+}
+
+IFS=$'\n'
+for p in "$HOME"/* ; do
+	if $(isTxt "$p") ; then
+		name=$(basename "$p")
+		echo "$name" >> "$Info"
+		gzip "$p"
+		mv "$p.gz" "$Dir/$name.gz"
+	fi
+done
+
+ls "$Dir"
+cat "$Info"

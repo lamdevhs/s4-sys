@@ -1,0 +1,46 @@
+#!/bin/bash
+
+Path=$1
+
+ErrorParams() {
+	echo "Erreur: necessite exactement 1 parametre: $1 de paramètres"
+	exit 1
+}
+
+case $# in
+	0) ErrorParams "pas assez";;
+	1) true ;;
+	*) ErrorParams "trop";;
+esac
+#echo "Good parameters."
+
+
+if ! [ -e "$Path" ] || ! [ -d "$Path" ] ; then
+	echo "le parametre passe n'est pas un nom de repertoire valide."
+	exit 1
+fi
+
+Dir="$Path"
+echo "Répertoire: $Dir"
+
+MostRecent=""
+
+for f in "$Dir"/* ; do
+	if [ -f "$f" ] ; then
+		#echo "$f"
+		if [ -z "$MostRecent" ] ; then
+			MostRecent="$f"
+		else
+			if [ "$f" -nt "$MostRecent" ] ; then
+				MostRecent="$f"
+			fi
+		fi
+	fi
+done
+
+if [ -z "$MostRecent" ] ; then
+	echo "Ce répertoire ne contient aucun fichier."
+else
+	name=$(basename "$MostRecent")
+	echo "Le fichier $name est le plus récent de ce répertoire"
+fi

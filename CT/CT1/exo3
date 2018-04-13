@@ -1,0 +1,31 @@
+#!/bin/bash
+
+userA=$1
+userB=$2
+
+isInList() {
+	list="$1"
+	res=grep '^abc,\|,abc,\|,abc\$\|^abc\$'
+}
+
+IFS=$'\n'
+for line in $(cat /etc/group) ; do
+	grpName=$(echo "$line" | cut -f1 -d:)
+	grpUsers=$(echo "$line" | cut -f4 -d: | sed 's/,/\n/g')
+	#echo $line ----- $grpName
+	containsA=1
+	containsB=1
+	for user in $grpUsers ; do
+		#echo ________ $user
+		if [ "$user" = "$userA" ] ; then
+			containsA=0
+		elif [ "$user" = "$userB" ] ; then
+			containsB=0
+		fi
+	done
+	if [ $containsA -eq 0 ] && [ $containsB -eq 0 ] ; then
+		echo -n "$grpName "
+	fi
+done
+
+echo # newline

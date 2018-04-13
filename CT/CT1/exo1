@@ -1,0 +1,22 @@
+#!/bin/bash
+
+FOLDER="$HOME/EXE"
+
+if [ -e "$FOLDER" ] ; then
+	echo "Error: folder $FOLDER already exists!"
+	exit 1
+fi
+
+mkdir "$FOLDER"
+
+#IFS=$'\n'
+for path in "$HOME"/* ; do
+	#echo $f
+	name=$(basename "$path")
+	if [ -f "$path" ] && [ -x "$path" ] ; then
+		mv "$HOME/$name" "$FOLDER/$name.exe"
+	fi
+done
+
+echo "done. contents of $FOLDER:"
+ls "$FOLDER"

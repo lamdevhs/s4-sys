@@ -1,0 +1,22 @@
+#!/bin/bash
+
+n=$1
+
+Erreur () {
+	echo "trop ou pas assez de paramètres"
+	exit 1
+}
+
+case $# in
+	0) Erreur ;;
+	1) true ;;
+	*) Erreur ;;
+esac
+
+all=""
+for i in $(seq 1 $n) ; do
+	echo "bonjour" > $i.txt
+	all="$all $i.txt"
+done
+
+gedit $all

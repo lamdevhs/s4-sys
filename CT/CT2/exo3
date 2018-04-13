@@ -1,0 +1,29 @@
+#!/bin/bash
+
+user=$1
+
+line=$(cat /etc/passwd | grep "^$user:")
+
+if [ -z "$line" ] ; then
+	echo "user does not exist"
+	exit 1
+fi
+#echo $line
+
+uid=$(echo $line | cut -f3 -d:)
+shell=$(echo $line | cut -f7 -d:)
+
+echo -n $user a pour id $uid, a pour shell $shell
+echo -n , et appartient aux groupes :
+
+IFS=$'\n'
+for gLine in $(cat /etc/group) ; do
+	grp=$(echo $gLine | cut -f1 -d:)
+	gUsers=$(echo $gLine | cut -f4 -d: | sed 's/,/\n/g')
+	for gUser in $gUsers ; do
+		if [ "$gUser" = "$user" ] ; then
+			echo -n " $grp"
+		fi
+	done
+done
+echo # newline
